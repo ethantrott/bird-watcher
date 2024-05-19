@@ -1,4 +1,4 @@
-# Bird Watcher 
+# Birdwatcher 
 ### Ethan Trott
 &nbsp;
 ## To Do:
