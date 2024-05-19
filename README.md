@@ -1,4 +1,5 @@
 # Bird Watcher 
-
-## To do:
-- [] add support for custom OSRM server
+### Ethan Trott
+&nbsp;
+## To Do:
+- add support for custom OSRM server
