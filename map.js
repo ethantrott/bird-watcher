@@ -52,7 +52,7 @@ routesData.forEach((route)=>{
         // disable auto-zoom to route, we handle this with fitMapToAllRoutes()
         fitSelectedRoutes: false,
 
-        // hide waypoint icons (workaround to only start and stop points)
+        // hide waypoint icons (workaround to only show start and stop points)
         createMarker: function() { return null; },
 
         // hide directions/itinerary
