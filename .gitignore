@@ -1,5 +1,4 @@
-config.json
-scripts/script_config.json
+*.json
 
 # Logs
 logs
