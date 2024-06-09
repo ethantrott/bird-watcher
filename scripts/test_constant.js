@@ -20,15 +20,15 @@ function parseFile(file){
     }
     
     for (bird in birdData.birds){
-        const id = birdData.birds[bird].id
-        const code = birdData.birds[bird].code
-        
-        if (!pairs[id]){
-            pairs[id] = code;
+        const code = birdData.birds[bird].code.substring(0,3)
+        const model= birdData.birds[bird].model
+
+        if (!pairs[code]){
+            pairs[code] = model;
         }
         else{
-            if (pairs[id].substring(0,3) !== code.substring(0,3)){
-                console.log("!!! code is different for "+id+": old="+pairs[id]+" new="+code);
+            if (pairs[code] !== model){
+                console.log("!!! model is different for "+code+": old="+pairs[code]+" new="+model);
                 throw new Error('^');
             }
         }
@@ -39,6 +39,7 @@ fs.readdir(dir, (err, files) => {
     files.forEach(file => {
         parseFile(dir+file);
     });
+    console.log(pairs);
     console.log(Object.keys(pairs).length);
 });
 
