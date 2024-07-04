@@ -3,6 +3,7 @@
 const sconfig = require("./script_config.json");
 const config = require("../config.json");
 
+const fss = require('fs');
 const fs = require('fs/promises');
 const { Client } = require('pg');
 const { v4: uuidv4 } = require('uuid');
@@ -18,14 +19,10 @@ const dir = sconfig.filepath;
 const filename = sconfig.test_file;
 
 async function parseFile(filepath, filename){    
-    console.log(1)
-    var birdData;
-    fs.readFile(filepath, 'utf8', function (err, data) {
-        if (err) throw err;
-        birdData = JSON.parse(data);
-    });
+    var data = fss.readFileSync(filepath,{ encoding: 'utf8', flag: 'r' });
+    birdData = JSON.parse(data);
+    if (birdData.birds.length == 0) throw new Error('no birds here');
 
-    console.log(2)
     //filename:             1999-01-08T04:05:06.429Z.json
     //proper (postgres):    1999-01-08 04:05:06
     var timestamp = filename.replace(".json","").replace("T" ," ").split('.')[0];;
@@ -41,7 +38,6 @@ async function parseFile(filepath, filename){
 
     for (bird in birdData.birds){
         const scooter = birdData.birds[bird]
-
         const bird_code = scooter.code.substring(0,3)
         //TODO: add checks
         var birdsInsert = {
@@ -66,11 +62,19 @@ async function parseFile(filepath, filename){
         dataToInsert.birds.push(birdsInsert);
         dataToInsert.moments.push(momentsInsert);
     }
-    console.log("r")
+
     return dataToInsert;
 }
 
 async function insertFileData(dataToInsert){
+    // check if this timestamp is in our DB before inserting
+    const res = await client.query(`SELECT exists (SELECT 1 FROM history WHERE time_utc = '${dataToInsert.history.time_utc}' LIMIT 1)`);
+
+    if (res.rows[0].exists){
+        console.log("Timestamp "+dataToInsert.history.time_utc+" already exists. Skipping...")
+        return;
+    }
+
     // insert bird table data
     for (i in dataToInsert.birds){
         const scooter = dataToInsert.birds[i];
@@ -109,15 +113,20 @@ async function mainLoop(){
     console.log("Found "+files.length + " files to import..");
 
     for (const filename of files) {
-        console.log("Loading "+filename);
-        // parse data from file
-        parseFile(dir+filename, filename).then((data)=>{
+        var data;
+        try{
+            // parse data from file
+            data = await parseFile(dir+filename, filename);
             console.log(filename + " parsed.");
+        }
+        catch(e){
+            console.log(filename+": Error encountered, not inserting data to db");
+        }
+        if (data){
             // insert data to db
-            insertFileData(data).then(()=>{
-                console.log(filename + " data inserted.");
-            });
-        });
+            await insertFileData(data);
+            console.log(filename + " data inserted.");
+        }
     }
 
     // exit
