@@ -71,7 +71,7 @@ async function insertFileData(dataToInsert){
     const res = await client.query(`SELECT exists (SELECT 1 FROM history WHERE time_utc = '${dataToInsert.history.time_utc}' LIMIT 1)`);
 
     if (res.rows[0].exists){
-        console.log("Timestamp "+dataToInsert.history.time_utc+" already exists. Skipping...")
+        //console.log("Timestamp "+dataToInsert.history.time_utc+" already exists. Skipping...")
         return;
     }
 
@@ -105,6 +105,8 @@ async function insertFileData(dataToInsert){
 }
 
 async function mainLoop(){
+    var currDate = "0";
+
     // connect
     await client.connect();
     console.log('Connected.');
@@ -117,15 +119,20 @@ async function mainLoop(){
         try{
             // parse data from file
             data = await parseFile(dir+filename, filename);
-            console.log(filename + " parsed.");
         }
         catch(e){
-            console.log(filename+": Error encountered, not inserting data to db");
+            // console.log("Error encountered, not inserting data");
         }
+
         if (data){
+            // reporting via output
+            if (filename.substring(0,10) !== currDate){
+                currDate = filename.substring(0,10);
+                console.log("Now on: "+currDate);
+            }
+
             // insert data to db
             await insertFileData(data);
-            console.log(filename + " data inserted.");
         }
     }
 
