@@ -3,8 +3,9 @@
 const sconfig = require("./script_config.json");
 const config = require("../config.json");
 
-const { v4: uuidv4 } = require('uuid');
+const fs = require('fs/promises');
 const { Client } = require('pg');
+const { v4: uuidv4 } = require('uuid');
 
 const client = new Client({
     host: config.host,
@@ -17,8 +18,14 @@ const dir = sconfig.filepath;
 const filename = sconfig.test_file;
 
 async function parseFile(filepath, filename){    
-    const birdData = require(filepath);
+    console.log(1)
+    var birdData;
+    fs.readFile(filepath, 'utf8', function (err, data) {
+        if (err) throw err;
+        birdData = JSON.parse(data);
+    });
 
+    console.log(2)
     //filename:             1999-01-08T04:05:06.429Z.json
     //proper (postgres):    1999-01-08 04:05:06
     var timestamp = filename.replace(".json","").replace("T" ," ").split('.')[0];;
@@ -59,6 +66,7 @@ async function parseFile(filepath, filename){
         dataToInsert.birds.push(birdsInsert);
         dataToInsert.moments.push(momentsInsert);
     }
+    console.log("r")
     return dataToInsert;
 }
 
@@ -97,22 +105,20 @@ async function mainLoop(){
     await client.connect();
     console.log('Connected.');
 
-    // parse data from file
-    var data = await parseFile(dir+filename, filename);
-    console.log(filename + " parsed.");
+    const files = await fs.readdir(dir);
+    console.log("Found "+files.length + " files to import..");
 
-    // insert data to db
-    await insertFileData(data);
-    console.log(filename + " data inserted.");
-
-    var res = await client.query(`SELECT * FROM birds`);
-    console.log(res.rows);
-
-    res = await client.query(`SELECT * FROM moments`);
-    console.log(res.rows);
-
-    var res = await client.query(`SELECT * FROM history`);
-    console.log(res.rows);
+    for (const filename of files) {
+        console.log("Loading "+filename);
+        // parse data from file
+        parseFile(dir+filename, filename).then((data)=>{
+            console.log(filename + " parsed.");
+            // insert data to db
+            insertFileData(data).then(()=>{
+                console.log(filename + " data inserted.");
+            });
+        });
+    }
 
     // exit
     await client.end(); 
