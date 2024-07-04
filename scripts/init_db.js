@@ -11,7 +11,26 @@ const client = new Client({
     password: config.password
 });
 
+function waitKeyPressed() {
+    return new Promise(resolve => {
+        const wasRaw = process.stdin.isRaw;
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.once("data", (data) => {
+            process.stdin.pause();
+            process.stdin.setRawMode(wasRaw);
+            resolve(data.toString());
+        });
+    });
+}
+
 async function main(){
+    console.log("WARNING: THIS WILL ERASE THE DB CONTENTS. PRESS ANY KEY TO CONTINUE. PRESS Q to CANCEL.")
+    var key = await waitKeyPressed();
+    if (key === 'q'){
+        return;
+    }
+
     // connect
     await client.connect();
     console.log('Connected.');
