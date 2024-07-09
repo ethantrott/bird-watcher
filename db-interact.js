@@ -24,7 +24,7 @@ async function disconnectDB(client){
 // gets latest bird data and returns it
 async function getLatestData(){
     const client = await connectDB();
-    const res = await client.query(`SELECT * FROM history WHERE time_utc = (SELECT MAX(time_utc) FROM history);`);
+    const res = await client.query(`SELECT * FROM history WHERE time_utc = (SELECT MAX(time_utc) FROM history) AT TIME ZONE 'UTC';`);
     
     var dataToReturn = res.rows[0];
     dataToReturn.birds = [];

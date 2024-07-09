@@ -6,8 +6,27 @@ html, body {
     flex-direction: column;
 }
 
+#navbar {
+    padding-left:20px; 
+    background-color:#B7DBF9;
+    height: 60px;
+}
+
 .map {
     flex: 1;
+    position: relative; /* Add this */
+    z-index: 0;
+}
+
+.top-right-map {
+    background-color: pink;
+    position: absolute;
+    top: 60px;
+    right: 0;
+    z-index: 100;
+    margin: 5px;
+    padding: 5px;
+    font-weight: bold;
 }
 
 /* Hide directions from routing engine */
